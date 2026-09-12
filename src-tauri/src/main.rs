@@ -3,9 +3,11 @@
 mod capture;
 mod intelligence;
 mod device_intelligence;
+mod settings;
 
 use capture::{CaptureController, CaptureInterface};
 use serde::{Deserialize, Serialize};
+use settings::{AppSettings, SettingsStore};
 use std::process::Command;
 use std::sync::Arc;
 use tauri::State;
@@ -14,8 +16,8 @@ use tauri::State;
 #[derive(Clone, Serialize)] struct Device { ip: String, mac: String, hostname: Option<String>, vendor: String, status: String }
 #[derive(Clone, Serialize, Default)] struct CaptureState { active: bool, packets: u64, dropped: u64 }
 #[derive(Clone, Serialize, Deserialize)] struct ProcessConnection { process: String, pid: u32, protocol: String, local_address: String, remote_address: String, state: String }
-struct AppState { capture: Arc<CaptureController> }
-impl Default for AppState { fn default() -> Self { Self { capture: Arc::new(CaptureController::default()) } } }
+struct AppState { capture: Arc<CaptureController>, settings: SettingsStore }
+impl Default for AppState { fn default() -> Self { Self { capture: Arc::new(CaptureController::default()), settings: SettingsStore::default() } } }
 
 #[tauri::command]
 fn network_state() -> NetworkState {
@@ -44,8 +46,10 @@ fn correlate_connection(device_ip:String, process:Option<String>, pid:Option<u32
 }
 
 #[tauri::command] fn list_capture_interfaces()->Result<Vec<CaptureInterface>,String>{capture::list_interfaces()}
-#[tauri::command] fn start_capture(interface:Option<String>,app:tauri::AppHandle,state:State<AppState>)->Result<(),String>{capture::start(app,state.capture.clone(),interface)}
+#[tauri::command] fn get_settings(state:State<AppState>)->AppSettings{state.settings.get()}
+#[tauri::command] fn set_settings(settings:AppSettings,state:State<AppState>)->AppSettings{state.settings.set(settings)}
+#[tauri::command] fn start_capture(interface:Option<String>,app:tauri::AppHandle,state:State<AppState>)->Result<(),String>{let chosen=interface.or_else(||state.settings.get().capture_interface);capture::start(app,state.capture.clone(),chosen)}
 #[tauri::command] fn stop_capture(state:State<AppState>)->bool{state.capture.stop();true}
 #[tauri::command] fn capture_status(state:State<AppState>)->CaptureState{CaptureState{active:state.capture.running.load(std::sync::atomic::Ordering::Relaxed),packets:*state.capture.packets.lock().unwrap(),dropped:*state.capture.dropped.lock().unwrap()}}
 
-fn main(){tauri::Builder::default().manage(AppState::default()).invoke_handler(tauri::generate_handler![network_state,discover_devices,process_connections,correlate_connection,list_capture_interfaces,start_capture,stop_capture,capture_status]).run(tauri::generate_context!()).expect("error while running NETSIGHT");}
+fn main(){tauri::Builder::default().manage(AppState::default()).invoke_handler(tauri::generate_handler![network_state,discover_devices,process_connections,correlate_connection,list_capture_interfaces,get_settings,set_settings,start_capture,stop_capture,capture_status]).run(tauri::generate_context!()).expect("error while running NETSIGHT");}
