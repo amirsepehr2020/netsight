@@ -17,7 +17,7 @@ struct NetworkState {
 #[derive(Clone, Serialize)]
 struct Device { ip: String, mac: String, hostname: Option<String>, vendor: String, status: String }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Default)]
 struct CaptureState { active: bool, packets: u64, dropped: u64 }
 
 #[derive(Default)]
