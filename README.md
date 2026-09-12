@@ -14,6 +14,21 @@ NETSIGHT is a Windows network visibility and packet analysis project designed to
 - Group traffic into recognizable services when identification is reliable
 - Present the same activity in both an approachable view and an expert packet view
 
+## Current v0.1
+
+The first Windows desktop milestone is now in `main` and includes:
+
+- Tauri 2 + Rust desktop shell
+- React + Vite + TypeScript UI
+- Finished NETSIGHT dark/premium visual system
+- Overview, Devices, Traffic, Packets, and Services views
+- Easy / Expert mode switch
+- Device detail drawer with visibility/evidence messaging
+- Windows network-state and ARP-based local device discovery commands
+- Windows GitHub Actions build pipeline
+
+Traffic capture and deeper service detection are the next native-core milestones; the current UI does not pretend its sample traffic is live capture data.
+
 ## Important visibility boundary
 
 NETSIGHT reports only information that the host can legitimately observe. Wi-Fi infrastructure, encryption, adapter capabilities, and network topology can limit visibility into traffic between other devices. The application must distinguish observed facts from inferred or likely service identification.
@@ -30,13 +45,13 @@ See [`BRAND.md`](BRAND.md) for the complete identity guidelines and [`assets/bra
 
 🟢 **Brand foundation** — complete
 
-🟡 **Network discovery** — planned
+🟢 **Windows application shell + UI** — complete for v0.1
 
-🟡 **Traffic capture** — planned
+🟢 **Local device discovery foundation** — complete for v0.1
 
-🟡 **Service identification** — planned
+🟡 **Traffic capture** — next milestone
 
-🟡 **Windows application UI** — planned
+🟡 **Service identification engine** — next milestone
 
 ## Safety & scope
 
