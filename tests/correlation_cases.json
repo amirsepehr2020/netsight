@@ -1,0 +1,21 @@
+[
+  {
+    "name": "known_service_from_domain",
+    "domain": "youtube.com",
+    "protocol": "TLS",
+    "expected_service": "YouTube",
+    "expected_confidence_min": 0.5
+  },
+  {
+    "name": "unknown_domain_stays_unknown",
+    "domain": "unknown.example",
+    "protocol": "TLS",
+    "expected_service": "Unknown"
+  },
+  {
+    "name": "process_connection_correlation",
+    "process": "chrome.exe",
+    "remote_port": 443,
+    "expected_protocol": "TCP/TLS"
+  }
+]
