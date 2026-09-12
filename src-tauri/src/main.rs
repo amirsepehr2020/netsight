@@ -39,7 +39,8 @@ fn discover_devices() -> Vec<Device> {
             let hostname=resolve_hostname(&ip);
             let vendor=vendor_from_mac(&mac);
             let model=infer_model(hostname.as_deref(), &vendor);
-            Some(Device{ip,mac,hostname,vendor,model,status:"Online".into()})
+            let display_hostname=hostname.clone().or_else(||model.clone());
+            Some(Device{ip,mac,hostname:display_hostname,vendor,model,status:"Online".into()})
         }).collect::<Vec<Device>>();
     }
     #[allow(unreachable_code)] Vec::new()
