@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::sync::Arc;
 use tauri::State;
+use crate::settings::{AppSettings, SettingsStore};
 
 #[derive(Clone, Serialize)] struct NetworkState { connected: bool, interface: String, local_ip: Option<String>, gateway: Option<String>, capture_available: bool }
 #[derive(Clone, Serialize)] struct Device { ip: String, mac: String, hostname: Option<String>, vendor: String, model: Option<String>, status: String }
@@ -39,7 +40,7 @@ fn discover_devices() -> Vec<Device> {
             let vendor=vendor_from_mac(&mac);
             let model=infer_model(hostname.as_deref(), &vendor);
             Some(Device{ip,mac,hostname,vendor,model,status:"Online".into()})
-        }).collect()
+        }).collect::<Vec<Device>>()
     }
     #[allow(unreachable_code)] Vec::new()
 }
