@@ -37,12 +37,12 @@ fn discover_devices() -> Vec<Device> {
 fn process_connections() -> Result<Vec<ProcessConnection>, String> {
     #[cfg(target_os = "windows")]
     {
-        let script = r#"$rows = @(); Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -and $_.RemoteAddress -notin @('0.0.0.0','::','127.0.0.1','::1')} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if($p){$rows += [PSCustomObject]@{process=$p.ProcessName;pid=$_.OwningProcess;protocol='TCP';local_address="$($_.LocalAddress):$($_.LocalPort)";remote_address="$($_.RemoteAddress):$($_.RemotePort)";state="$($_.State)"}} }; $rows | ConvertTo-Json -Compress"#;
+        let script = r#"$rows = @(Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -and $_.RemoteAddress -notin @('0.0.0.0','::','127.0.0.1','::1')} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if($p){[PSCustomObject]@{process=$p.ProcessName;pid=[int]$_.OwningProcess;protocol='TCP';local_address="$($_.LocalAddress):$($_.LocalPort)";remote_address="$($_.RemoteAddress):$($_.RemotePort)";state="$($_.State)"}} }); $rows | ConvertTo-Json -Compress"#;
         let output=Command::new("powershell").args(["-NoProfile","-NonInteractive","-Command",script]).output().map_err(|e|e.to_string())?;
         if !output.status.success(){return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());}
         let text=String::from_utf8_lossy(&output.stdout).trim().to_string(); if text.is_empty(){return Ok(Vec::new());}
         let value:serde_json::Value=serde_json::from_str(&text).map_err(|e|format!("Process connection data invalid: {e}"))?;
-        let items=if value.is_array(){value}else{serde_json::Value::Array(vec![value])};
+        let items=match value { serde_json::Value::Array(items)=>items, other=>vec![other] };
         return Ok(items.into_iter().filter_map(|v|serde_json::from_value(v).ok()).collect());
     }
     #[allow(unreachable_code)] Err("Local process mapping is currently Windows-only.".into())
