@@ -7,12 +7,11 @@ use tauri::{AppHandle, Emitter};
 
 #[repr(C)] struct PcapIf { next: *mut PcapIf, name: *mut c_char, description: *mut c_char, addresses: *mut c_void, flags: u32 }
 #[repr(C)] struct PcapPkthdr { ts_sec: i64, ts_usec: i64, caplen: u32, len: u32 }
-#[repr(C)] struct PcapHandle(c_void);
 type FindAllDevs = unsafe extern "C" fn(*mut *mut PcapIf, *mut c_char) -> c_int;
 type FreeAllDevs = unsafe extern "C" fn(*mut PcapIf);
-type OpenLive = unsafe extern "C" fn(*const c_char, c_int, c_int, c_int, *mut c_char) -> *mut PcapHandle;
-type NextEx = unsafe extern "C" fn(*mut PcapHandle, *mut *const PcapPkthdr, *mut *const u8) -> c_int;
-type Close = unsafe extern "C" fn(*mut PcapHandle);
+type OpenLive = unsafe extern "C" fn(*const c_char, c_int, c_int, c_int, *mut c_char) -> *mut c_void;
+type NextEx = unsafe extern "C" fn(*mut c_void, *mut *const PcapPkthdr, *mut *const u8) -> c_int;
+type Close = unsafe extern "C" fn(*mut c_void);
 type PcapFns = (FindAllDevs, FreeAllDevs, OpenLive, NextEx, Close);
 
 #[derive(Clone, Serialize)] pub struct CaptureInterface { pub name: String, pub description: Option<String> }
@@ -23,7 +22,17 @@ impl CaptureController { pub fn stop(&self) { self.running.store(false, Ordering
 
 fn load() -> Result<(Library, PcapFns), String> {
     #[cfg(target_os = "windows")]
-    { let lib = Library::new("wpcap.dll").map_err(|e| format!("Npcap/wpcap.dll not available: {e}"))?; let f = (*lib.get::<FindAllDevs>(b"pcap_findalldevs\0").map_err(|e|e.to_string())?, *lib.get::<FreeAllDevs>(b"pcap_freealldevs\0").map_err(|e|e.to_string())?, *lib.get::<OpenLive>(b"pcap_open_live\0").map_err(|e|e.to_string())?, *lib.get::<NextEx>(b"pcap_next_ex\0").map_err(|e|e.to_string())?, *lib.get::<Close>(b"pcap_close\0").map_err(|e|e.to_string())?); Ok((lib,f)) }
+    {
+        let lib = unsafe { Library::new("wpcap.dll") }.map_err(|e| format!("Npcap/wpcap.dll not available: {e}"))?;
+        let f = unsafe {
+            (*lib.get::<FindAllDevs>(b"pcap_findalldevs\0").map_err(|e|e.to_string())?,
+             *lib.get::<FreeAllDevs>(b"pcap_freealldevs\0").map_err(|e|e.to_string())?,
+             *lib.get::<OpenLive>(b"pcap_open_live\0").map_err(|e|e.to_string())?,
+             *lib.get::<NextEx>(b"pcap_next_ex\0").map_err(|e|e.to_string())?,
+             *lib.get::<Close>(b"pcap_close\0").map_err(|e|e.to_string())?)
+        };
+        Ok((lib,f))
+    }
     #[cfg(not(target_os = "windows"))] { Err("Packet capture is currently Windows-only.".into()) }
 }
 
