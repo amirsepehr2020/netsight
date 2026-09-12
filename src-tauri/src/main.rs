@@ -31,7 +31,7 @@ fn discover_devices() -> Vec<Device> {
     #[cfg(target_os = "windows")]
     {
         let text=Command::new("arp").arg("-a").output().ok().map(|o|String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default();
-        text.lines().filter_map(|line|{
+        return text.lines().filter_map(|line|{
             let p:Vec<&str>=line.split_whitespace().collect();
             if p.len()<2 || p[0].parse::<std::net::Ipv4Addr>().is_err() || !p[1].contains('-') { return None; }
             let ip=p[0].to_string();
@@ -40,7 +40,7 @@ fn discover_devices() -> Vec<Device> {
             let vendor=vendor_from_mac(&mac);
             let model=infer_model(hostname.as_deref(), &vendor);
             Some(Device{ip,mac,hostname,vendor,model,status:"Online".into()})
-        }).collect::<Vec<Device>>()
+        }).collect::<Vec<Device>>();
     }
     #[allow(unreachable_code)] Vec::new()
 }
