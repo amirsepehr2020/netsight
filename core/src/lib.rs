@@ -1,4 +1,6 @@
+pub mod analyzer;
 pub mod model;
+pub mod service_detection;
 pub mod traffic;
 
 #[cfg(test)]
