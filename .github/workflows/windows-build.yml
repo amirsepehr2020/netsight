@@ -3,7 +3,7 @@ name: NETSIGHT Windows Build
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'fix/**']
 
 env:
   CARGO_TERM_COLOR: always
@@ -25,6 +25,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Run Rust regression tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
 
       - name: Build NETSIGHT
         run: npm run tauri -- build
