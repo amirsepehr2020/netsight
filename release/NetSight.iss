@@ -1,5 +1,5 @@
 #define MyAppName "NetSight"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "1.0.0"
 #define MyAppPublisher "NetSight"
 #define MyAppExeName "netsight-desktop.exe"
 
@@ -7,12 +7,12 @@
 AppId={{7B4D4B1A-8D0D-4E2D-9E2B-7C2D5F7E5A10}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-AppVerName={#MyAppName} {#MyAppVersion} RC1
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\NetSight
 DefaultGroupName=NetSight
 OutputDir=..\dist
-OutputBaseFilename=NetSight-Setup-{#MyAppVersion}-rc.1
+OutputBaseFilename=NetSight-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
