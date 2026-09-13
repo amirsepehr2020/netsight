@@ -3,6 +3,7 @@ pub mod device;
 pub mod live_timeline;
 pub mod model;
 pub mod packet;
+pub mod session;
 pub mod timeline;
 pub mod traffic;
 
@@ -22,3 +23,6 @@ mod tests {
         assert_eq!(CaptureState::Idle, CaptureState::default());
     }
 }
+
+#[cfg(test)]
+mod session_tests;
