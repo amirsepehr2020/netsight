@@ -149,9 +149,9 @@ mod windows_agent {
 
     fn sessions_json(sessions: &[netsight_core::session::SessionSummary]) -> Vec<serde_json::Value> {
         sessions.iter().map(|s| serde_json::json!({
-            "id": s.id,
-            "capture_device": s.capture_device,
-            "state": s.state,
+            "id": &s.id,
+            "capture_device": &s.capture_device,
+            "state": &s.state,
             "started_at_ms": s.started_at_ms,
             "finished_at_ms": s.finished_at_ms,
             "snapshot_count": s.snapshot_count,
