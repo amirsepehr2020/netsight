@@ -1,4 +1,5 @@
 pub mod model;
+pub mod traffic;
 
 #[cfg(test)]
 mod tests {
