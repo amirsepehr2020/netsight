@@ -118,7 +118,8 @@ mod tests {
         p[12..14].copy_from_slice(&0x0800u16.to_be_bytes()); p[14] = 0x45; p[23] = 6;
         p[26..30].copy_from_slice(&[192,168,1,10]); p[30..34].copy_from_slice(&[1,1,1,1]);
         p[34..36].copy_from_slice(&50000u16.to_be_bytes()); p[36..38].copy_from_slice(&443u16.to_be_bytes()); p[46] = 0x50;
-        let packet = normalize_ethernet(1_000_000, p.len() as u32, p.len() as u32, &p).unwrap();
+        let timestamp_micros = now.duration_since(UNIX_EPOCH).unwrap().as_micros() as i64;
+        let packet = normalize_ethernet(timestamp_micros, p.len() as u32, p.len() as u32, &p).unwrap();
         let mut timeline = LiveTimeline::new(Duration::from_secs(60), 100);
         timeline.ingest(&packet, id, "HTTPS");
         let snapshot = DashboardSnapshot::from_runtime(CaptureState::Running, "Wi-Fi", &devices, &traffic, &timeline);
