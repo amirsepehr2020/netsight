@@ -9,7 +9,7 @@ pub mod traffic;
 
 #[cfg(test)]
 mod tests {
-    use super::model::{CaptureState, DiagnosticEvent, DiagnosticLevel};
+    use super::model::{CaptureHealth, CaptureState, DiagnosticEvent, DiagnosticLevel};
 
     #[test]
     fn diagnostic_event_is_constructible() {
@@ -21,6 +21,13 @@ mod tests {
     #[test]
     fn capture_state_starts_idle() {
         assert_eq!(CaptureState::Idle, CaptureState::default());
+    }
+
+    #[test]
+    fn capture_health_reports_pressure() {
+        let health = CaptureHealth { packets_received: 10, packets_dropped: 1, queue_depth: 8, queue_capacity: 10, ..Default::default() };
+        assert!((health.drop_rate_percent() - 9.0909090909).abs() < 0.000001);
+        assert_eq!(health.queue_utilization_percent(), 80.0);
     }
 }
 
