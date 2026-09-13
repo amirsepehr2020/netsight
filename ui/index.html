@@ -17,10 +17,10 @@
     </aside>
     <main class="ns-main" id="overview">
       <header class="ns-topbar">
-        <div><h1 class="ns-title">Network Overview</h1><p class="ns-subtitle">Live visibility across your connected network.</p></div>
+        <div><h1 class="ns-title">Network Overview</h1><p class="ns-subtitle" id="view-subtitle">Live visibility across your connected network.</p></div>
         <div class="ns-status" id="capture-status"><span class="ns-dot"></span> Connecting…</div>
       </header>
-      <section class="ns-card ns-capture-bar"><span>Capture adapter</span><strong id="capture-device">Connecting to local agent…</strong><span class="ns-live-hint">localhost:8765</span></section>
+      <section class="ns-card ns-capture-bar"><span>Capture adapter</span><strong id="capture-device">Connecting to local agent…</strong><span class="ns-live-hint">localhost:8765</span><button class="ns-button" id="live-button" hidden>Back to live</button></section>
       <section class="ns-grid" aria-label="Network statistics">
         <article class="ns-card"><div class="ns-card-label">Devices</div><div class="ns-card-value" id="device-count">—</div></article>
         <article class="ns-card"><div class="ns-card-label">Active flows</div><div class="ns-card-value" id="flow-count">—</div></article>
@@ -38,6 +38,10 @@
       <section class="ns-card ns-timeline" id="timeline">
         <div class="ns-section-head"><div><h2>Live Timeline</h2><p>Rolling packet activity from the capture pipeline.</p></div></div>
         <div id="timeline-list"></div>
+      </section>
+      <section class="ns-card ns-sessions" id="sessions">
+        <div class="ns-section-head"><div><h2>Sessions</h2><p>Persistent capture history stored locally on this machine.</p></div></div>
+        <div id="session-list" class="ns-session-list"><div class="ns-empty">Loading session history…</div></div>
       </section>
     </main>
   </div>
