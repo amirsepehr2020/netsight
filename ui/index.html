@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetSight — Network Observability</title>
+  <link rel="icon" href="../branding/assets/netsight-app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="ns-shell">
+    <aside class="ns-sidebar">
+      <div class="ns-brand">
+        <img src="../branding/assets/netsight-logo.svg" alt="NetSight">
+        <span>NetSight</span>
+      </div>
+      <nav class="ns-nav" aria-label="Primary">
+        <a class="active" href="#overview">Overview</a>
+        <a href="#devices">Devices</a>
+        <a href="#flows">Flows</a>
+        <a href="#timeline">Timeline</a>
+        <a href="#sessions">Sessions</a>
+      </nav>
+    </aside>
+    <main class="ns-main">
+      <header class="ns-topbar">
+        <div>
+          <h1 class="ns-title">Network Overview</h1>
+          <p class="ns-subtitle">Live visibility across your connected network.</p>
+        </div>
+        <div class="ns-status"><span class="ns-dot"></span> Capturing</div>
+      </header>
+      <section class="ns-grid" aria-label="Network statistics">
+        <article class="ns-card"><div class="ns-card-label">Devices</div><div class="ns-card-value">12</div></article>
+        <article class="ns-card"><div class="ns-card-label">Active flows</div><div class="ns-card-value">48</div></article>
+        <article class="ns-card"><div class="ns-card-label">Download</div><div class="ns-card-value">18.4 MB/s</div></article>
+        <article class="ns-card"><div class="ns-card-label">Upload</div><div class="ns-card-value">2.7 MB/s</div></article>
+      </section>
+      <section class="ns-card ns-table" id="flows">
+        <table>
+          <thead><tr><th>Device</th><th>Service</th><th>Protocol</th><th>Traffic</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>SEPEHR-PC</td><td><span class="ns-service">GitHub</span></td><td>TLS</td><td>840 KB</td><td>Active</td></tr>
+            <tr><td>Galaxy A15</td><td><span class="ns-service">YouTube</span></td><td>HTTPS</td><td>2.4 MB</td><td>Active</td></tr>
+            <tr><td>iPhone</td><td><span class="ns-service">Google</span></td><td>DNS</td><td>182 KB</td><td>Idle</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
