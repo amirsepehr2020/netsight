@@ -30,7 +30,9 @@ mod windows_agent {
         let adapter_ips = netsight_windows::discover_network_context().unwrap_or_default().into_iter()
             .flat_map(|a| a.ipv4.into_iter()).filter_map(|v| v.parse::<IpAddr>().ok()).collect::<Vec<_>>();
 
-        let session_store = SessionStore::open(session_db_path()).context("failed to open persistent session store")?;
+        let db_path = session_db_path();
+        if let Some(parent) = db_path.parent() { std::fs::create_dir_all(parent).context("failed to create NetSight data directory")?; }
+        let session_store = SessionStore::open(&db_path).context("failed to open persistent session store")?;
         let session_id = session_store.start(&device.name).context("failed to create capture session")?;
         let shared = Shared {
             snapshot: Arc::new(Mutex::new(DashboardSnapshot::new(CaptureState::Starting, device.name.clone()).to_json()?)),
@@ -42,8 +44,7 @@ mod windows_agent {
         let mut registry = DeviceRegistry::new(Duration::from_secs(300), 512);
         let mut traffic = TrafficAggregator::new();
         let mut timeline = LiveTimeline::new(Duration::from_secs(120), 5000);
-        let initial = DashboardSnapshot::from_runtime(CaptureState::Running, &device.name, &registry, &traffic, &timeline);
-        persist_and_publish(&shared, &session_id, initial)?;
+        persist_and_publish(&shared, &session_id, DashboardSnapshot::from_runtime(CaptureState::Running, &device.name, &registry, &traffic, &timeline))?;
 
         for event in events {
             match event {
@@ -60,13 +61,11 @@ mod windows_agent {
                         registry.record_traffic(&id, normalized.captured_len as u64, local_source);
                         registry.add_service(&id, service);
                         timeline.ingest(&normalized, id, service);
-                        let snapshot = DashboardSnapshot::from_runtime(CaptureState::Running, &device.name, &registry, &traffic, &timeline);
-                        persist_and_publish(&shared, &session_id, snapshot)?;
+                        persist_and_publish(&shared, &session_id, DashboardSnapshot::from_runtime(CaptureState::Running, &device.name, &registry, &traffic, &timeline))?;
                     }
                 }
                 CaptureEvent::Error(error) => {
-                    let snapshot = DashboardSnapshot::from_runtime(CaptureState::Failed, &device.name, &registry, &traffic, &timeline);
-                    persist_and_publish(&shared, &session_id, snapshot)?;
+                    persist_and_publish(&shared, &session_id, DashboardSnapshot::from_runtime(CaptureState::Failed, &device.name, &registry, &traffic, &timeline))?;
                     eprintln!("capture error: {error}");
                     break;
                 }
@@ -75,11 +74,9 @@ mod windows_agent {
         }
 
         session.stop()?;
-        {
-            let store = shared.sessions.lock().map_err(|_| anyhow::anyhow!("session store lock poisoned"))?;
-            store.finish(&session_id)?;
-        }
-        publish(&shared, DashboardSnapshot::from_runtime(CaptureState::Idle, &device.name, &registry, &traffic, &timeline))?;
+        persist_and_publish(&shared, &session_id, DashboardSnapshot::from_runtime(CaptureState::Idle, &device.name, &registry, &traffic, &timeline))?;
+        let store = shared.sessions.lock().map_err(|_| anyhow::anyhow!("session store lock poisoned"))?;
+        store.finish(&session_id)?;
         Ok(())
     }
 
@@ -109,11 +106,6 @@ mod windows_agent {
         store.append_snapshot(session_id, &json)?;
         drop(store);
         *shared.snapshot.lock().map_err(|_| anyhow::anyhow!("dashboard snapshot lock poisoned"))? = json;
-        Ok(())
-    }
-
-    fn publish(shared:&Shared,snapshot:DashboardSnapshot)->Result<()> {
-        *shared.snapshot.lock().map_err(|_| anyhow::anyhow!("dashboard snapshot lock poisoned"))?=snapshot.to_json()?;
         Ok(())
     }
 
