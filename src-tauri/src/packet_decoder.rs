@@ -67,7 +67,7 @@ fn service_for_port(proto: u8, sp: u16, dp: u16) -> Option<String> { let p=if dp
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn eth_ipv4(proto:u8, payload:&[u8]) -> Vec<u8> { let mut f=vec![0u8;14+20+payload.len()]; f[12]=0x08;f[13]=0x00;f[14]=0x45;f[22]=proto;f[26]=192;f[27]=168;f[28]=1;f[29]=10;f[30]=8;f[31]=8;f[32]=8;f[33]=8;f[34..].copy_from_slice(payload);f }
+    fn eth_ipv4(proto:u8, payload:&[u8]) -> Vec<u8> { let mut f=vec![0u8;14+20+payload.len()]; f[12]=0x08;f[13]=0x00;f[14]=0x45;f[23]=proto;f[26]=192;f[27]=168;f[28]=1;f[29]=10;f[30]=8;f[31]=8;f[32]=8;f[33]=8;f[34..].copy_from_slice(payload);f }
     #[test] fn decodes_tcp_ports() { let mut p=vec![0u8;20];p[0]=0x1f;p[1]=0x90;p[2]=0x01;p[3]=0xbb;p[13]=0x02;let d=decode(&eth_ipv4(6,&p),54).unwrap();assert_eq!(d.protocol,"TCP");assert_eq!(d.source_port,Some(8080));assert_eq!(d.destination_port,Some(443));assert_eq!(d.service_hint.as_deref(),Some("HTTPS")); }
     #[test] fn decodes_udp_dns() { let mut p=vec![0u8;8];p[0]=0x30;p[1]=0x39;p[2]=0;p[3]=53;let d=decode(&eth_ipv4(17,&p),42).unwrap();assert_eq!(d.protocol,"UDP");assert_eq!(d.service_hint.as_deref(),Some("DNS")); }
     #[test] fn rejects_truncated_frames() { assert!(decode(&[0u8;13],13).is_none()); assert!(decode(&eth_ipv4(6,&[0u8;5]),39).is_some()); }
