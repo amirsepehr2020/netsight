@@ -1,6 +1,17 @@
 name: NetSight Windows Release
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'platform/**'
+      - 'ui/**'
+      - 'release/**'
+      - 'branding/**'
+      - '.github/workflows/release-windows.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   workflow_dispatch:
     inputs:
       tag:
@@ -36,6 +47,9 @@ jobs:
         run: |
           cargo build --release --bin netsight-agent --bin netsight-desktop
 
+      - name: Run release tests
+        run: cargo test --workspace
+
       - name: Stage release payload
         shell: powershell
         run: |
@@ -50,6 +64,13 @@ jobs:
         shell: powershell
         run: |
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" release\NetSight.iss
+
+      - name: Smoke-check release payload
+        shell: powershell
+        run: |
+          if (-not (Test-Path dist\netsight-agent.exe)) { throw 'netsight-agent.exe missing' }
+          if (-not (Test-Path dist\netsight-desktop.exe)) { throw 'netsight-desktop.exe missing' }
+          if (-not (Test-Path dist\NetSight-Setup-*.exe)) { throw 'installer missing' }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
