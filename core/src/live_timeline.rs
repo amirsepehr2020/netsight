@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn ingest_adds_live_sample() {
         let packet = NormalizedPacket {
-            timestamp_micros: 1_000_000,
+            timestamp_micros: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_micros() as i64,
             captured_len: 128,
             original_len: 128,
             source_ip: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
