@@ -6,7 +6,6 @@ edition.workspace = true
 [dependencies]
 netsight-core = { path = "../../core" }
 anyhow.workspace = true
-tracing.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 pcap = "2"
