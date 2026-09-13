@@ -1,3 +1,4 @@
+pub mod correlation;
 pub mod model;
 pub mod traffic;
 
