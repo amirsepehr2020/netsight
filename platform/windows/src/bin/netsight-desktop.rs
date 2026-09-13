@@ -21,20 +21,21 @@ mod desktop {
             .with_min_inner_size(tao::dpi::LogicalSize::new(1100.0, 700.0))
             .build(&event_loop)
             .context("unable to create NetSight native window")?;
-        let _webview = WebViewBuilder::new(&window)
+
+        let _webview = WebViewBuilder::new()
             .with_url(DASHBOARD_URL)
-            .context("unable to load NetSight dashboard")?
-            .build()
+            .context("unable to configure NetSight dashboard URL")?
+            .build(&window)
             .context("unable to initialize Windows WebView2")?;
-        event_loop.run(move |event, target| {
-            target.set_control_flow(ControlFlow::Wait);
+
+        event_loop.run(move |event, _target, control_flow| {
+            *control_flow = ControlFlow::Wait;
             if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
                 let _ = agent.kill();
                 let _ = agent.wait();
-                target.exit();
+                *control_flow = ControlFlow::Exit;
             }
-        })?;
-        Ok(())
+        });
     }
 
     fn select_adapter() -> Result<String> {
@@ -70,7 +71,17 @@ mod desktop {
 #[cfg(windows)]
 fn main() -> anyhow::Result<()> {
     if std::env::args().nth(1).as_deref() == Some("--list-adapters") {
-        println!("{}", netsight_windows::list_capture_devices().map(|devices| serde_json::to_string(&devices.into_iter().map(|d| serde_json::json!({"name": d.name})).collect::<Vec<_>>()))??);
+        println!(
+            "{}",
+            netsight_windows::list_capture_devices().map(|devices| {
+                serde_json::to_string(
+                    &devices
+                        .into_iter()
+                        .map(|d| serde_json::json!({"name": d.name}))
+                        .collect::<Vec<_>>(),
+                )
+            })??
+        );
         return Ok(());
     }
     desktop::run()
