@@ -16,3 +16,5 @@ serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
+wry = "0.53"
+tao = "0.30"
