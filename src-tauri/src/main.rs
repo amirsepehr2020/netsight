@@ -3,6 +3,7 @@
 mod capture;
 mod intelligence;
 mod device_intelligence;
+mod packet_decoder;
 mod settings;
 
 use capture::{CaptureController, CaptureInterface};
@@ -28,7 +29,7 @@ fn hidden_command(program: &str) -> Command { Command::new(program) }
 #[tauri::command]
 fn network_state() -> NetworkState {
     #[cfg(target_os="windows")]
-    { let text=hidden_command("ipconfig").output().ok().map(|o|String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default(); let local_ip=text.lines().find_map(|line|{let t=line.trim();if t.contains("IPv4"){t.split(':').nth(1).map(|v|v.trim().trim_end_matches("(Preferred)").trim().to_string())}else{None}}); let gateway=hidden_command("powershell").args(["-NoProfile","-NonInteractive","-Command","(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway}).IPv4DefaultGateway.NextHop | Select-Object -First 1"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).filter(|s|!s.is_empty()); return NetworkState{connected:local_ip.is_some(),interface:"Windows network adapter".into(),local_ip,gateway,capture_available:true}; }
+    { let text=hidden_command("ipconfig").output().ok().map(|o|String::from_utf8_lossy(&o.stdout).to_string()).unwrap_or_default(); let local_ip=text.lines().find_map(|line|{let t=line.trim();t.split_whitespace().find_map(|part|{let clean=part.trim_matches(|c:char|!c.is_ascii_digit()&&c!='.');let ip=clean.trim_end_matches("(Preferred)"); if ip.parse::<std::net::Ipv4Addr>().is_ok(){Some(ip.to_string())}else{None}})}); let gateway=hidden_command("powershell").args(["-NoProfile","-NonInteractive","-Command","(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway}).IPv4DefaultGateway.NextHop | Select-Object -First 1"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).filter(|s|!s.is_empty()); let capture_available=capture::list_interfaces().map(|v|!v.is_empty()).unwrap_or(false); return NetworkState{connected:local_ip.is_some(),interface:"Windows network adapter".into(),local_ip,gateway,capture_available}; }
     #[allow(unreachable_code)] NetworkState{connected:false,interface:"Unknown".into(),local_ip:None,gateway:None,capture_available:false}
 }
 
