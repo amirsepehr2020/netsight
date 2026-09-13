@@ -64,7 +64,8 @@ fn discover_devices() -> Vec<Device> {
         return rows.into_iter().filter_map(|v| {
             let ip = v.get("ip")?.as_str()?.to_string();
             let mac = v.get("mac")?.as_str()?.to_string();
-            Some(Device { ip, mac, hostname: None, vendor: vendor_from_mac(&mac), status: "Online".into() })
+            let vendor = vendor_from_mac(&mac);
+            Some(Device { ip, mac, hostname: None, vendor, status: "Online".into() })
         }).collect();
     }
     #[allow(unreachable_code)] Vec::new()
