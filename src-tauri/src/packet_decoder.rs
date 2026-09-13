@@ -29,35 +29,32 @@ fn decode_ipv4(b: &[u8], length: u32) -> Option<DecodedPacket> {
     if ihl < 20 || b.len() < ihl { return None; }
     let src = Ipv4Addr::new(b[12], b[13], b[14], b[15]).to_string();
     let dst = Ipv4Addr::new(b[16], b[17], b[18], b[19]).to_string();
-    let proto = b[9];
-    let payload = &b[ihl..];
-    decode_l4(src, dst, proto, payload, length)
+    decode_l4(src, dst, b[9], &b[ihl..], length)
 }
 
 fn decode_ipv6(b: &[u8], length: u32) -> Option<DecodedPacket> {
     if b.len() < 40 { return None; }
     let src = Ipv6Addr::from(<[u8; 16]>::try_from(&b[8..24]).ok()?).to_string();
     let dst = Ipv6Addr::from(<[u8; 16]>::try_from(&b[24..40]).ok()?).to_string();
-    let next = b[6];
-    decode_l4(src, dst, next, &b[40..], length)
+    decode_l4(src, dst, b[6], &b[40..], length)
 }
 
 fn decode_l4(source: String, destination: String, proto: u8, payload: &[u8], length: u32) -> Option<DecodedPacket> {
     match proto {
         6 => {
-            if payload.len() < 20 { return Some(base(source, destination, "TCP", length, "Truncated TCP header")); }
+            if payload.len() < 20 { return Some(base(source, destination, "TCP", length, "Truncated TCP header".to_string())); }
             let sp = u16::from_be_bytes([payload[0], payload[1]]);
             let dp = u16::from_be_bytes([payload[2], payload[3]]);
             Some(with_ports(source, destination, "TCP", sp, dp, length, tcp_info(payload), service_for_port(6, sp, dp)))
         }
         17 => {
-            if payload.len() < 8 { return Some(base(source, destination, "UDP", length, "Truncated UDP header")); }
+            if payload.len() < 8 { return Some(base(source, destination, "UDP", length, "Truncated UDP header".to_string())); }
             let sp = u16::from_be_bytes([payload[0], payload[1]]);
             let dp = u16::from_be_bytes([payload[2], payload[3]]);
             Some(with_ports(source, destination, "UDP", sp, dp, length, "Datagram".into(), service_for_port(17, sp, dp)))
         }
-        1 => Some(base(source, destination, "ICMP", length, "Internet Control Message Protocol")),
-        58 => Some(base(source, destination, "ICMPv6", length, "Internet Control Message Protocol v6")),
+        1 => Some(base(source, destination, "ICMP", length, "Internet Control Message Protocol".to_string())),
+        58 => Some(base(source, destination, "ICMPv6", length, "Internet Control Message Protocol v6".to_string())),
         _ => Some(base(source, destination, "IP", length, format!("IPv{proto} payload"))),
     }
 }
