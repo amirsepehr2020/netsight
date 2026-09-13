@@ -1,5 +1,6 @@
 pub mod device;
 pub mod model;
+pub mod packet;
 pub mod timeline;
 pub mod traffic;
 
