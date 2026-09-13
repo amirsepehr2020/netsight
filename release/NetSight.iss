@@ -11,21 +11,22 @@ AppVerName={#MyAppName} {#MyAppVersion} RC1
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\NetSight
 DefaultGroupName=NetSight
-OutputDir=dist
+OutputDir=..\dist
 OutputBaseFilename=NetSight-Setup-{#MyAppVersion}-rc.1
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
 PrivilegesRequired=admin
-UninstallDisplayIcon={app}\netsight-desktop.exe
-SetupIconFile=dist\netsight.ico
+UninstallDisplayIcon=..\dist\netsight-desktop.exe
+SetupIconFile=..\dist\netsight.ico
 WizardStyle=modern
 
 [Files]
-Source: "dist\netsight-desktop.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\netsight-agent.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\netsight.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\ui\*"; DestDir: "{app}\ui"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\netsight-desktop.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\netsight-agent.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\netsight.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\install-prerequisites.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\ui\*"; DestDir: "{app}\ui"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\NetSight"; Filename: "{app}\netsight-desktop.exe"; IconFilename: "{app}\netsight.ico"
