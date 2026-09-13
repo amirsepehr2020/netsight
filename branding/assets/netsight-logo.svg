@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">NetSight</title>
+  <desc id="desc">A network graph inspired N mark for NetSight.</desc>
+  <defs>
+    <linearGradient id="signal" x1="74" y1="80" x2="438" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="0.58" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#07111F"/>
+  <path d="M124 372V140L256 284 388 140V372" fill="none" stroke="#10243A" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M124 372V140L256 284 388 140V372" fill="none" stroke="url(#signal)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <circle cx="124" cy="140" r="25" fill="#22D3EE"/>
+  <circle cx="256" cy="284" r="25" fill="#3B82F6"/>
+  <circle cx="388" cy="140" r="25" fill="#8B5CF6"/>
+  <circle cx="124" cy="372" r="18" fill="#3B82F6"/>
+  <circle cx="388" cy="372" r="18" fill="#8B5CF6"/>
+</svg>

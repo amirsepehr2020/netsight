@@ -1,0 +1,13 @@
+{
+  "product": "NetSight",
+  "version": "0.1.0",
+  "channel": "rc",
+  "release": "0.1.0-rc.1",
+  "desktop_binary": "netsight-desktop.exe",
+  "agent_binary": "netsight-agent.exe",
+  "requirements": {
+    "windows": "10/11 x64",
+    "npcap": "1.79+",
+    "webview2": "Evergreen Runtime"
+  }
+}
