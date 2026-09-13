@@ -27,6 +27,7 @@ Source: "..\dist\netsight-agent.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\netsight.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\install-prerequisites.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\ui\*"; DestDir: "{app}\ui"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\branding\*"; DestDir: "{app}\branding"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\NetSight"; Filename: "{app}\netsight-desktop.exe"; IconFilename: "{app}\netsight.ico"
@@ -41,3 +42,4 @@ Filename: "{app}\netsight-desktop.exe"; Description: "Launch NetSight"; Flags: n
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\ui"
+Type: filesandordirs; Name: "{app}\branding"
