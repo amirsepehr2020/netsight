@@ -13,7 +13,7 @@ mod desktop {
 
     pub fn run() -> Result<()> {
         let adapter = select_adapter().context("unable to select a Windows capture adapter")?;
-        let agent = start_agent(&adapter).context("unable to start the NetSight capture agent")?;
+        let mut agent = start_agent(&adapter).context("unable to start the NetSight capture agent")?;
         let event_loop = EventLoop::new();
         let window = WindowBuilder::new()
             .with_title("NetSight")
