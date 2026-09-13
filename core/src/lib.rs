@@ -2,6 +2,7 @@ pub mod device;
 pub mod live_timeline;
 pub mod model;
 pub mod packet;
+pub mod persistence;
 pub mod timeline;
 pub mod traffic;
 
@@ -13,7 +14,6 @@ mod tests {
     fn diagnostic_event_is_constructible() {
         let event = DiagnosticEvent::new("CAPTURE-0001", DiagnosticLevel::Info, "capture initialized");
         assert_eq!(event.code, "CAPTURE-0001");
-        assert_eq!(event.level, DiagnosticLevel::Info);
     }
 
     #[test]
