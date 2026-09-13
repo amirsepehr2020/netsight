@@ -1,3 +1,4 @@
+pub mod device;
 pub mod model;
 pub mod timeline;
 pub mod traffic;
