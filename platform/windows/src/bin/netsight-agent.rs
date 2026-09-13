@@ -11,7 +11,7 @@ mod windows_agent {
     use netsight_windows::{list_capture_devices, CaptureConfig, CaptureEvent, CaptureSession};
     use std::io::{Read, Write};
     use std::net::{IpAddr, TcpListener, TcpStream};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::{Arc, Mutex};
     use std::thread;
     use std::time::{Duration, SystemTime};
@@ -115,6 +115,29 @@ mod windows_agent {
     fn session_db_path() -> PathBuf {
         if let Ok(v) = std::env::var("LOCALAPPDATA") { PathBuf::from(v).join("NetSight").join("sessions.db") } else { PathBuf::from("netsight-sessions.db") }
     }
+    fn static_root() -> PathBuf {
+        std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)).unwrap_or_else(|| PathBuf::from("."))
+    }
+    fn content_type(path: &Path) -> &'static str {
+        match path.extension().and_then(|v| v.to_str()).unwrap_or("") {
+            "html" => "text/html; charset=utf-8",
+            "css" => "text/css; charset=utf-8",
+            "js" => "text/javascript; charset=utf-8",
+            "svg" => "image/svg+xml",
+            "ico" => "image/x-icon",
+            _ => "application/octet-stream",
+        }
+    }
+    fn static_file(path: &str) -> Option<(String, String)> {
+        let relative = if path == "/" { "ui/index.html" } else { path.trim_start_matches('/') };
+        let candidate = static_root().join(relative);
+        let root = static_root();
+        let candidate = candidate.canonicalize().ok()?;
+        let root = root.canonicalize().ok()?;
+        if !candidate.starts_with(&root) || !candidate.is_file() { return None; }
+        let body = std::fs::read_to_string(&candidate).ok()?;
+        Some((content_type(&candidate).into(), body))
+    }
     fn protocol_name(p: Option<netsight_core::packet::TransportProtocol>) -> String {
         match p { Some(netsight_core::packet::TransportProtocol::Tcp) => "TCP".into(), Some(netsight_core::packet::TransportProtocol::Udp) => "UDP".into(), Some(netsight_core::packet::TransportProtocol::Other(n)) => format!("IP/{n}"), None => "IP".into() }
     }
@@ -135,7 +158,7 @@ mod windows_agent {
         Ok(())
     }
     fn handle_http(mut stream: TcpStream, s: Shared) -> Result<()> {
-        let mut req = [0u8; 4096]; let size = stream.read(&mut req)?; let request = String::from_utf8_lossy(&req[..size]);
+        let mut req = [0u8; 8192]; let size = stream.read(&mut req)?; let request = String::from_utf8_lossy(&req[..size]);
         let path = request.lines().next().and_then(|x| x.split_whitespace().nth(1)).unwrap_or("/");
         let (status, ct, body) = match path {
             "/api/snapshot" => ("200 OK", "application/json", s.snapshot.lock().map_err(|_| anyhow::anyhow!("snapshot lock poisoned"))?.clone()),
@@ -143,7 +166,7 @@ mod windows_agent {
             "/api/diagnostics" => { let h = s.health.lock().map_err(|_| anyhow::anyhow!("health lock poisoned"))?.clone(); ("200 OK", "application/json", serde_json::json!({"health":h,"drop_rate_percent":h.drop_rate_percent(),"queue_utilization_percent":h.queue_utilization_percent()}).to_string()) },
             "/api/sessions" => { let v = s.sessions.lock().map_err(|_| anyhow::anyhow!("session store lock poisoned"))?.list()?; ("200 OK", "application/json", serde_json::to_string(&sessions_json(&v))?) },
             p if p.starts_with("/api/sessions/") => { let id = &p[14..]; match s.sessions.lock().map_err(|_| anyhow::anyhow!("session store lock poisoned"))?.load_latest_snapshot(id)? { Some(v) => ("200 OK", "application/json", v), None => ("404 Not Found", "application/json", "{\"error\":\"session not found\"}".into()) } },
-            _ => ("404 Not Found", "application/json", "{\"error\":\"not found\"}".into()),
+            _ => match static_file(path) { Some((ct, body)) => ("200 OK", Box::leak(ct.into_boxed_str()), body), None => ("404 Not Found", "application/json", "{\"error\":\"not found\"}".into()) },
         };
         let response = format!("HTTP/1.1 {status}\r\nContent-Type: {ct}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.as_bytes().len());
         stream.write_all(response.as_bytes())?; Ok(())
