@@ -18,3 +18,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 wry = "0.53"
 tao = "0.30"
+windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging"] }
