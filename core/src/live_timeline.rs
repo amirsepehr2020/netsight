@@ -1,4 +1,4 @@
-use std::time::{Duration, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::packet::NormalizedPacket;
 use crate::timeline::{TrafficSample, TrafficTimeline};
