@@ -1,4 +1,5 @@
 pub mod model;
+pub mod timeline;
 pub mod traffic;
 
 #[cfg(test)]
