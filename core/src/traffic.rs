@@ -64,7 +64,7 @@ impl TrafficAggregator {
     }
 
     pub fn capture_state_compatible(state: CaptureState) -> bool {
-        matches!(state, CaptureState::Capturing | CaptureState::Stopping)
+        matches!(state, CaptureState::Running | CaptureState::Stopping)
     }
 }
 
@@ -99,5 +99,12 @@ mod tests {
         aggregator.record(key(), 42);
         aggregator.reset();
         assert_eq!(aggregator.snapshot(), TrafficSnapshot::default());
+    }
+
+    #[test]
+    fn running_capture_is_compatible() {
+        assert!(TrafficAggregator::capture_state_compatible(CaptureState::Running));
+        assert!(TrafficAggregator::capture_state_compatible(CaptureState::Stopping));
+        assert!(!TrafficAggregator::capture_state_compatible(CaptureState::Idle));
     }
 }
