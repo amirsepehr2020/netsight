@@ -1,0 +1,66 @@
+name: NetSight Windows Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (for example v0.1.0-rc.1)'
+        required: true
+        default: 'v0.1.0-rc.1'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        shell: powershell
+        run: |
+          choco install innosetup --yes --no-progress
+          choco install imagemagick --yes --no-progress
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable-x86_64-pc-windows-msvc
+
+      - name: Build Windows binaries
+        run: |
+          cargo build --release --bin netsight-agent --bin netsight-desktop
+
+      - name: Stage release payload
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path dist\ui | Out-Null
+          Copy-Item target\release\netsight-agent.exe dist\netsight-agent.exe
+          Copy-Item target\release\netsight-desktop.exe dist\netsight-desktop.exe
+          Copy-Item ui\* dist\ui\ -Recurse -Force
+          Copy-Item release\install-prerequisites.ps1 dist\install-prerequisites.ps1
+          magick convert branding\assets\netsight-app-icon.svg dist\netsight.ico
+
+      - name: Build installer
+        shell: powershell
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" release\NetSight.iss
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetSight-Windows-RC
+          path: dist\NetSight-Setup-*.exe
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist\NetSight-Setup-*.exe
+          prerelease: true
+          generate_release_notes: true
