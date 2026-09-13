@@ -1,4 +1,5 @@
 pub mod analyzer;
+pub mod correlation;
 pub mod model;
 pub mod service_detection;
 pub mod traffic;
