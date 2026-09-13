@@ -24,7 +24,6 @@ mod desktop {
 
         let _webview = WebViewBuilder::new()
             .with_url(DASHBOARD_URL)
-            .context("unable to configure NetSight dashboard URL")?
             .build(&window)
             .context("unable to initialize Windows WebView2")?;
 
