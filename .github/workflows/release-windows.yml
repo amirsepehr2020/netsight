@@ -68,9 +68,11 @@ jobs:
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path dist\ui | Out-Null
+          New-Item -ItemType Directory -Force -Path dist\branding\assets | Out-Null
           Copy-Item target\release\netsight-agent.exe dist\netsight-agent.exe
           Copy-Item target\release\netsight-desktop.exe dist\netsight-desktop.exe
           Copy-Item ui\* dist\ui\ -Recurse -Force
+          Copy-Item branding\assets\* dist\branding\assets\ -Recurse -Force
           Copy-Item release\install-prerequisites.ps1 dist\install-prerequisites.ps1
           magick convert branding\assets\netsight-app-icon.svg dist\netsight.ico
 
@@ -84,6 +86,8 @@ jobs:
         run: |
           if (-not (Test-Path dist\netsight-agent.exe)) { throw 'netsight-agent.exe missing' }
           if (-not (Test-Path dist\netsight-desktop.exe)) { throw 'netsight-desktop.exe missing' }
+          if (-not (Test-Path dist\ui\index.html)) { throw 'dashboard index missing' }
+          if (-not (Test-Path dist\branding\assets\netsight-logo.svg)) { throw 'branding asset missing' }
           if (-not (Test-Path dist\NetSight-Setup-*.exe)) { throw 'installer missing' }
 
       - name: Upload installer artifact
