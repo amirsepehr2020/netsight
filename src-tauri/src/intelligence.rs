@@ -1,45 +1,24 @@
 use std::net::Ipv4Addr;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Detection<'a> {
-    pub service: &'a str,
-    pub confidence: u8,
-}
+pub struct Detection<'a> { pub service: &'a str, pub confidence: u8 }
 
-const RULES: &[(&str, &str, &str, u8)] = &[
-    ("youtube.com", "YouTube", "domain", 98),
-    ("googlevideo.com", "YouTube", "domain", 98),
-    ("ytimg.com", "YouTube", "domain", 98),
-    ("google.com", "Google", "domain", 98),
-    ("gstatic.com", "Google", "domain", 98),
-    ("github.com", "GitHub", "domain", 98),
-    ("githubusercontent.com", "GitHub", "domain", 98),
-    ("discord.com", "Discord", "domain", 98),
-    ("discord.gg", "Discord", "domain", 98),
-    ("instagram.com", "Instagram", "domain", 98),
-    ("cdninstagram.com", "Instagram", "domain", 98),
-    ("facebook.com", "Facebook", "domain", 98),
-    ("microsoft.com", "Microsoft", "domain", 98),
-    ("live.com", "Microsoft", "domain", 98),
-    ("steampowered.com", "Steam", "domain", 98),
-    ("steamcontent.com", "Steam", "domain", 98),
-    ("telegram.org", "Telegram", "domain", 98),
-    ("t.me", "Telegram", "domain", 98),
-    ("cloudflare.com", "Cloudflare", "domain", 98),
-    ("cloudfront.net", "Amazon CloudFront", "domain", 95),
-    ("amazonaws.com", "Amazon Web Services", "domain", 95),
-    ("apple.com", "Apple", "domain", 98),
-    ("icloud.com", "iCloud", "domain", 98),
-    ("spotify.com", "Spotify", "domain", 98),
-    ("netflix.com", "Netflix", "domain", 98),
+const RULES: &[(&str, &str, u8)] = &[
+    ("youtube.com", "YouTube", 98), ("googlevideo.com", "YouTube", 98), ("ytimg.com", "YouTube", 98),
+    ("google.com", "Google", 98), ("gstatic.com", "Google", 98), ("github.com", "GitHub", 98), ("githubusercontent.com", "GitHub", 98),
+    ("discord.com", "Discord", 98), ("discord.gg", "Discord", 98), ("instagram.com", "Instagram", 98), ("cdninstagram.com", "Instagram", 98),
+    ("facebook.com", "Facebook", 98), ("microsoft.com", "Microsoft", 98), ("live.com", "Microsoft", 98),
+    ("steampowered.com", "Steam", 98), ("steamcontent.com", "Steam", 98), ("telegram.org", "Telegram", 98), ("t.me", "Telegram", 98),
+    ("cloudflare.com", "Cloudflare", 98), ("cloudfront.net", "Amazon CloudFront", 95), ("amazonaws.com", "Amazon Web Services", 95),
+    ("apple.com", "Apple", 98), ("icloud.com", "iCloud", 98), ("spotify.com", "Spotify", 98), ("netflix.com", "Netflix", 98),
 ];
 
 pub fn domain(domain: &str) -> Detection<'static> {
     let d = domain.trim_end_matches('.').to_ascii_lowercase();
-    if let Some((_, name, _, confidence)) = RULES.iter().find(|(suffix, _, _, _)| d == *suffix || d.ends_with(&format!(".{suffix}"))) {
+    if let Some((_, name, confidence)) = RULES.iter().find(|(suffix, _, _)| d == *suffix || d.ends_with(&format!(".{suffix}"))) {
         return Detection { service: name, confidence: *confidence };
     }
-    Detection { service: "Unknown domain", confidence: 72 }
+    Detection { service: "Unknown", confidence: 0 }
 }
 
 pub fn port(port: u16, protocol: &str) -> Detection<'static> {
@@ -57,8 +36,8 @@ pub fn port(port: u16, protocol: &str) -> Detection<'static> {
 
 pub fn ip_hint(ip: &str) -> Option<Detection<'static>> {
     let parsed = ip.parse::<Ipv4Addr>().ok()?;
-    let octets = parsed.octets();
-    if octets[0] == 8 && octets[1] == 8 { return Some(Detection { service: "Google DNS", confidence: 86 }); }
-    if octets[0] == 1 && octets[1] == 1 { return Some(Detection { service: "Cloudflare DNS", confidence: 86 }); }
+    let [a, b, _, _] = parsed.octets();
+    if a == 8 && b == 8 { return Some(Detection { service: "Google DNS", confidence: 86 }); }
+    if a == 1 && b == 1 { return Some(Detection { service: "Cloudflare DNS", confidence: 86 }); }
     None
 }
