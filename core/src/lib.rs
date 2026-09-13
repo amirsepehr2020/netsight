@@ -1,5 +1,6 @@
 pub mod correlation;
 pub mod model;
+pub mod packet_parser;
 pub mod traffic;
 
 #[cfg(test)]
