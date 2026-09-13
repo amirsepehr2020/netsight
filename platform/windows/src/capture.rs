@@ -11,7 +11,7 @@ use pcap::{Active, Capture, Device};
 #[cfg(windows)]
 use std::sync::mpsc::{self, Receiver, Sender};
 #[cfg(windows)]
-use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
+use std::sync::{atomic::{AtomicU64, Ordering}, Arc};
 #[cfg(windows)]
 use std::thread::{self, JoinHandle};
 
@@ -43,7 +43,8 @@ impl CaptureSession {
  pub fn start(device_name:&str,config:CaptureConfig)->Result<(Self,Receiver<CaptureEvent>)>{
   let device=Device::list().context("failed to enumerate Npcap devices")?.into_iter().find(|d|d.name==device_name).with_context(||format!("capture device not found: {device_name}"))?;
   let mut builder=Capture::from_device(device).context("failed to create capture builder")?.snaplen(config.snaplen).timeout(config.read_timeout_ms);
-  if config.promiscuous{builder=builder.promisc(true)} if config.immediate_mode{builder=builder.immediate_mode(true)}
+  if config.promiscuous { builder=builder.promisc(true); }
+  if config.immediate_mode { builder=builder.immediate_mode(true); }
   let mut capture=builder.open().context("failed to open Npcap capture handle")?;
   let (event_tx,event_rx)=mpsc::sync_channel(config.queue_capacity.max(1)); let (stop_tx,stop_rx)=mpsc::channel();
   let metrics=Arc::new(CaptureMetricsAtomic{received:AtomicU64::new(0),dropped:AtomicU64::new(0),bytes:AtomicU64::new(0),errors:AtomicU64::new(0),depth:AtomicU64::new(0)}); let worker_metrics=Arc::clone(&metrics); let capacity=config.queue_capacity.max(1);
@@ -51,10 +52,10 @@ impl CaptureSession {
   Ok((Self{stop_tx:Some(stop_tx),worker:Some(worker),metrics,queue_capacity:capacity},event_rx))
  }
  pub fn metrics(&self)->CaptureMetrics{self.metrics.snapshot(self.queue_capacity)}
- pub fn stop(mut self)->Result<()>{if let Some(tx)=self.stop_tx.take(){let _=tx.send(())}if let Some(worker)=self.worker.take(){worker.join().map_err(|_|anyhow::anyhow!("capture worker panicked"))?}Ok(())}
+ pub fn stop(mut self)->Result<()>{if let Some(tx)=self.stop_tx.take(){let _=tx.send(());}if let Some(worker)=self.worker.take(){worker.join().map_err(|_|anyhow::anyhow!("capture worker panicked"))?;}Ok(())}
 }
 #[cfg(windows)]
-impl Drop for CaptureSession{fn drop(&mut self){if let Some(tx)=self.stop_tx.take(){let _=tx.send(())}if let Some(worker)=self.worker.take(){let _=worker.join()}}}
+impl Drop for CaptureSession{fn drop(&mut self){if let Some(tx)=self.stop_tx.take(){let _=tx.send(());}if let Some(worker)=self.worker.take(){let _=worker.join();}}}
 #[cfg(windows)]
-fn run_capture_loop(capture:&mut Capture<Active>,stop_rx:Receiver<()>,event_tx:mpsc::SyncSender<CaptureEvent>,metrics:Arc<CaptureMetricsAtomic>){loop{if stop_rx.try_recv().is_ok(){let _=event_tx.send(CaptureEvent::Stopped);break}match capture.next_packet(){Ok(packet)=>{let timestamp_micros=packet.header.ts.tv_sec as i64*1_000_000+packet.header.ts.tv_usec as i64;metrics.received.fetch_add(1,Ordering::Relaxed);metrics.bytes.fetch_add(packet.header.caplen as u64,Ordering::Relaxed);metrics.depth.fetch_add(1,Ordering::Relaxed);let event=CaptureEvent::Packet(CapturedPacket{timestamp_micros,captured_len:packet.header.caplen,original_len:packet.header.len,data:packet.data.to_vec()});match event_tx.try_send(event){Ok(())=>{},Err(mpsc::TrySendError::Full(_))=>{metrics.dropped.fetch_add(1,Ordering::Relaxed)},Err(mpsc::TrySendError::Disconnected(_))=>break}metrics.depth.fetch_sub(1,Ordering::Relaxed)},Err(pcap::Error::TimeoutExpired)=>continue,Err(err)=>{metrics.errors.fetch_add(1,Ordering::Relaxed);let _=event_tx.send(CaptureEvent::Error(err.to_string()));break}}}}
+fn run_capture_loop(capture:&mut Capture<Active>,stop_rx:Receiver<()>,event_tx:mpsc::SyncSender<CaptureEvent>,metrics:Arc<CaptureMetricsAtomic>){loop{if stop_rx.try_recv().is_ok(){let _=event_tx.send(CaptureEvent::Stopped);break;}match capture.next_packet(){Ok(packet)=>{let timestamp_micros=packet.header.ts.tv_sec as i64*1_000_000+packet.header.ts.tv_usec as i64;metrics.received.fetch_add(1,Ordering::Relaxed);metrics.bytes.fetch_add(packet.header.caplen as u64,Ordering::Relaxed);metrics.depth.fetch_add(1,Ordering::Relaxed);let event=CaptureEvent::Packet(CapturedPacket{timestamp_micros,captured_len:packet.header.caplen,original_len:packet.header.len,data:packet.data.to_vec()});match event_tx.try_send(event){Ok(())=>{},Err(mpsc::TrySendError::Full(_))=>{metrics.dropped.fetch_add(1,Ordering::Relaxed);},Err(mpsc::TrySendError::Disconnected(_))=>break,};metrics.depth.fetch_sub(1,Ordering::Relaxed);},Err(pcap::Error::TimeoutExpired)=>continue,Err(err)=>{metrics.errors.fetch_add(1,Ordering::Relaxed);let _=event_tx.send(CaptureEvent::Error(err.to_string()));break;}}}}
 #[cfg(test)]mod tests{use super::*;#[test]fn default_capture_config_is_bounded(){let c=CaptureConfig::default();assert_eq!(c.snaplen,65_535);assert!(c.read_timeout_ms>0);assert!(c.promiscuous);assert!(c.queue_capacity>0)}#[test]fn packet_lengths_are_preserved(){let p=CapturedPacket{timestamp_micros:1,captured_len:4,original_len:8,data:vec![1,2,3,4]};assert_eq!(p.captured_len as usize,p.data.len());assert!(p.original_len>=p.captured_len)}#[test]fn metrics_default_to_zero(){let m=CaptureMetrics::default();assert_eq!(m.packets_received,0);assert_eq!(m.packets_dropped,0);assert_eq!(m.capture_errors,0)}}
