@@ -7,8 +7,8 @@ edition.workspace = true
 netsight-core = { path = "../../core" }
 anyhow.workspace = true
 serde_json.workspace = true
-wry.workspace = true
-tao.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 pcap = "2"
+wry.workspace = true
+tao.workspace = true
